@@ -51,6 +51,12 @@ public class StaticFilesConfiguration {
 
     private List<AbstractResourceHandler> staticResourceHandlers = null;
     private List<JarResourceHandler> jarResourceHandlers = null;
+    private static HashMap<String,String> staticMime = new HashMap<String,String>(){{ 
+        put(".css","text/css"); 
+        put(".js","application/javascript");
+        put(".jpg","image/jpeg");
+        put(".png","image/png");
+        put(".gif","image/gif");}};
 
     private boolean staticResourcesSet = false;
     private boolean externalStaticResourcesSet = false;
@@ -86,6 +92,9 @@ public class StaticFilesConfiguration {
                 AbstractFileResolvingResource resource = staticResourceHandler.getResource(httpRequest);
 
                 if (resource != null && resource.isReadable()) {
+                    String path = httpRequest.getPathInfo();
+                    String ext = path.substring(path.lastIndexOf(".")); 
+                    httpResponse.setContentType(staticMime.get(ext));
                     OutputStream wrappedOutputStream = GzipUtils.checkAndWrap(httpRequest, httpResponse, false);
                     customHeaders.forEach(httpResponse::setHeader); //add all user-defined headers to response
                     IOUtils.copy(resource.getInputStream(), wrappedOutputStream);
@@ -107,6 +116,9 @@ public class StaticFilesConfiguration {
                 InputStream stream = jarResourceHandler.getResource(httpRequest);
 
                 if (stream != null) {
+                    String path = httpRequest.getPathInfo();
+                    String ext = path.substring(path.lastIndexOf(".")); 
+                    httpResponse.setContentType(staticMime.get(ext));
                     OutputStream wrappedOutputStream = GzipUtils.checkAndWrap(httpRequest, httpResponse, false);
                     customHeaders.forEach(httpResponse::setHeader); //add all user-defined headers to response
 
